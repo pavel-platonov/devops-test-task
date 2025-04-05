@@ -1,4 +1,4 @@
-name: Deploy to Localhost
+name: Deploy to VPS
 
 on:
   push:
@@ -6,17 +6,31 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
+    name: Deploy to Remote Server
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
+      - name: SSH and deploy via Docker Compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            apt-get update -y
+            apt-get install -y docker.io docker-compose git
 
-      - name: Build Docker image
-        run: docker build -t test-app .
+            cd /root
+            if [ ! -d devops ]; then
+              git clone https://github.com/ElonaA/devops.git
+            else
+              cd devops && git pull
+            fi
 
-      - name: Run Docker container
-        run: docker run -d -p 8080:80 test-app
+            cd /root/devops
+            docker-compose down || true
+            docker-compose up -d --build
