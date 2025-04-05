@@ -26,7 +26,7 @@ jobs:
 
             cd /root
             if [ ! -d devops ]; then
-              git clone https://github.com/ElonaA/devops.git
+              git clone https://github.com/pavel-platonov/devops-test-task.git devops
             else
               cd devops && git pull
             fi
